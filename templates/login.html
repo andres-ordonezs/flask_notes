@@ -1,15 +1,13 @@
 {% extends 'base.html' %}
 
-
 {% block title %}
-Register
+Login
 {% endblock %}
-
 
 {% block content %}
 
 <div class="container">
-  <form class="form-group" id="register-form" method="POST">
+  <form class="form-group" id="login-form" method="POST">
     {{ form.hidden_tag() }}
 
     {% for field in form
@@ -26,8 +24,9 @@ Register
 
     {% endfor %}
 
-    <button class="btn btn-primary" type="submit">Register</button>
+    <button class="btn btn-primary" type="submit">Login</button>
   </form>
 </div>
+
 
 {% endblock %}
