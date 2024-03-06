@@ -1,9 +1,8 @@
 """Forms for user app."""
 
-from wtforms import StringField, PasswordField
+from wtforms import StringField, PasswordField, TextAreaField
 from flask_wtf import FlaskForm
 from wtforms.validators import InputRequired, Email
-
 
 
 class RegisterUser(FlaskForm):
@@ -20,6 +19,12 @@ class LoginForm(FlaskForm):
     """Form for logging in a user"""
     username = StringField("Username", validators=[InputRequired()])
     password = PasswordField('Password', validators=[InputRequired()])
+
+
+class AddNoteForm(FlaskForm):
+    """ Form for adding notes """
+    title = StringField("Title", validators=[InputRequired()])
+    content = TextAreaField('Content', validators=[InputRequired()])
 
 
 class CSRFProtectForm(FlaskForm):

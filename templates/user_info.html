@@ -33,5 +33,34 @@ User Info
 
 </div>
 
+<div class="container">
+  <h2>Notes</h2>
+  <ul>
+    {% for note in user.notes %}
+
+    <li><a href="/notes/{{note.id}}/update">{{note.title}}</a></li>
+    <form>
+      <button type="submit" formaction="/notes/{{note.id}}/delete" formmethod="POST">
+        Delete
+      </button>
+    </form>
+
+    {% endfor %}
+  </ul>
+
+</div>
+
+<div class="container">
+  <form>
+    <a class="btn btn-primary" formmethod="GET" href="/users/{{user.username}}/notes/add">
+      Add more notes
+    </a>
+
+    <button class="btn btn-danger" type="submit" formaction="/users/{{user.username}}/delete" formmethod="POST">
+      Delete User
+    </button>
+  </form>
+</div>
+
 
 {% endblock %}

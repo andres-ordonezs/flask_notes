@@ -1,8 +1,8 @@
 """Flask app for Notes"""
 import os
 from flask import Flask, request, render_template, redirect, session, flash
-from models import db, User, connect_db
-from forms import RegisterUser, LoginForm, CSRFProtectForm
+from models import db, User, Note, connect_db
+from forms import RegisterUser, LoginForm, AddNoteForm, CSRFProtectForm
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
@@ -15,6 +15,7 @@ connect_db(app)
 app.config['SECRET_KEY'] = "I'LL NEVER TELL!!"
 
 USERNAME_IN_SESSION = 'username'
+
 
 @app.get('/')
 def show_homepage():
@@ -110,9 +111,43 @@ def logout_user():
         flash('You are now logged out.')
         return redirect('/')
 
-
     flash('You do not have access.')
     return redirect('/')
 
 
+@app.delete('/users/<username>/delete')
+def delete_user(username):
+    """ Remove the user from the database. Log the user out and redirect to /
+    """
 
+    user = User.query.get_or_404(username)
+
+    Note.query.filter(Note.owner_username == user.username).delete()
+
+    db.session.delete(user)
+    db.session.commit()
+
+    return redirect('/')
+
+
+@app.route('/users/<username>/notes/add', methods=["GET", "POST"])
+def display_add_notes_form(username):
+    """ Display form to add notes """
+
+    form = AddNoteForm()
+
+    if form.validate_on_submit():
+        title = form.title.data
+        content = form.content.data
+
+        new_note = Note(
+            title=title,
+            content=content,
+            owner_username=username)
+
+        db.session.add(new_note)
+        db.session.commit()
+
+        return redirect(f"/users/{username}")
+
+    return render_template('add_note.html', form=form)
