@@ -1,8 +1,8 @@
 """Flask app for Notes"""
 import os
-from flask import Flask, request, render_template, redirect, session
+from flask import Flask, request, render_template, redirect, session, flash
 from models import db, User, connect_db
-from forms import RegisterUser, LoginForm
+from forms import RegisterUser, LoginForm, CSRFProtectForm
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
@@ -14,6 +14,7 @@ connect_db(app)
 
 app.config['SECRET_KEY'] = "I'LL NEVER TELL!!"
 
+USERNAME_IN_SESSION = 'username'
 
 @app.get('/')
 def show_homepage():
@@ -46,7 +47,7 @@ def register_user():
         db.session.add(new_user)
         db.session.commit()
 
-        session["username"] = new_user.username
+        session[USERNAME_IN_SESSION] = new_user.username
 
         return redirect(f"/users/{new_user.username}")
 
@@ -69,7 +70,7 @@ def login_user():
         user = User.authenticate(username=username, pwd=password)
 
         if user:
-            session["username"] = user.username
+            session[USERNAME_IN_SESSION] = user.username
 
             return redirect(f"/users/{user.username}")
 
@@ -81,11 +82,37 @@ def login_user():
 
 @app.get('/users/<username>')
 def show_user(username):
+    """show user info."""
 
-    if 'username' not in session:
+    if USERNAME_IN_SESSION not in session:
+        flash('You are not logged in.')
         return redirect("/login")
 
-    else:
-        user = User.query.get_or_404(username)
+    if session[USERNAME_IN_SESSION] != username:
+        current_user = session[USERNAME_IN_SESSION]
+        flash('You do not have access.')
+        return redirect(f"/users/{current_user}")
 
-        return render_template("user_info.html", user=user)
+    user = User.query.get_or_404(username)
+    form = CSRFProtectForm()
+
+    return render_template("user_info.html", user=user, form=form)
+
+
+@app.post('/logout')
+def logout_user():
+    """logs user out and redirects to index."""
+
+    form = CSRFProtectForm()
+
+    if form.validate_on_submit():
+        session.pop(USERNAME_IN_SESSION, None)
+        flash('You are now logged out.')
+        return redirect('/')
+
+
+    flash('You do not have access.')
+    return redirect('/')
+
+
+
