@@ -116,19 +116,22 @@ def logout_user():
     return redirect('/')
 
 
-@app.delete('/users/<username>/delete')
+@app.post('/users/<username>/delete')
 def delete_user(username):
     """ Remove the user from the database. Log the user out and redirect to /
     """
 
     user = User.query.get_or_404(username)
+    form = CSRFProtectForm()
 
-    Note.query.filter(Note.owner_username == user.username).delete()
+    if form.validate_on_submit():
+        Note.query.filter(Note.owner_username == user.username).delete()
 
-    db.session.delete(user)
-    db.session.commit()
+        db.session.delete(user)
+        db.session.commit()
 
-    return redirect('/')
+        return redirect('/')
+
 
 
 @app.route('/users/<username>/notes/add', methods=["GET", "POST"])
@@ -159,15 +162,13 @@ def display_add_notes_form(username):
 def update_notes(note_id):
     """"Displays a form to edit user notes on page, and for making changes."""
 
-
-    form = EditNoteForm()
     note = Note.query.get_or_404(note_id)
 
     form = EditNoteForm(obj=note)
 
     if form.validate_on_submit():
-        note.title = form.title.data or note.title
-        note.content = form.content.data or note.content
+        note.title = form.title.data
+        note.content = form.content.data
 
         db.session.commit()
 
