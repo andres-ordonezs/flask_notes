@@ -163,6 +163,8 @@ def update_notes(note_id):
     form = EditNoteForm()
     note = Note.query.get_or_404(note_id)
 
+    form = EditNoteForm(obj=note)
+
     if form.validate_on_submit():
         note.title = form.title.data or note.title
         note.content = form.content.data or note.content
