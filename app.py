@@ -2,7 +2,8 @@
 import os
 from flask import Flask, request, render_template, redirect, session, flash
 from models import db, User, Note, connect_db
-from forms import RegisterUser, LoginForm, AddNoteForm, CSRFProtectForm
+from forms import RegisterUser, LoginForm, AddNoteForm, CSRFProtectForm, EditNoteForm
+from werkzeug.exceptions import Unauthorized
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
@@ -90,7 +91,7 @@ def show_user(username):
         return redirect("/login")
 
     if session[USERNAME_IN_SESSION] != username:
-        current_user = session[USERNAME_IN_SESSION]
+        current_user = username
         flash('You do not have access.')
         return redirect(f"/users/{current_user}")
 
@@ -151,3 +152,40 @@ def display_add_notes_form(username):
         return redirect(f"/users/{username}")
 
     return render_template('add_note.html', form=form)
+
+
+
+@app.route('/notes/<note_id>/update', methods=["GET", "POST"])
+def update_notes(note_id):
+    """"Displays a form to edit user notes on page, and for making changes."""
+
+
+    form = EditNoteForm()
+    note = Note.query.get_or_404(note_id)
+
+    if form.validate_on_submit():
+        note.title = form.title.data or note.title
+        note.content = form.content.data or note.content
+
+        db.session.commit()
+
+        return redirect(f"/users/{note.owner_username}")
+
+    return render_template('edit_note.html', form=form, note=note)
+
+
+@app.post('/notes/<note_id>/delete')
+def delete_note(note_id):
+    """Delete user's current note."""
+
+    note = Note.query.get_or_404(note_id)
+
+    form = CSRFProtectForm()
+
+    if form.validate_on_submit():
+        db.session.delete(note)
+        db.session.commit()
+
+        return redirect(f"/users/{note.owner_username}")
+
+

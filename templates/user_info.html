@@ -43,6 +43,7 @@ User Info
       <button type="submit" formaction="/notes/{{note.id}}/delete" formmethod="POST">
         Delete
       </button>
+      {{ form.hidden_tag() }}
     </form>
 
     {% endfor %}
@@ -59,6 +60,7 @@ User Info
     <button class="btn btn-danger" type="submit" formaction="/users/{{user.username}}/delete" formmethod="POST">
       Delete User
     </button>
+    {{ form.hidden_tag() }}
   </form>
 </div>
 
